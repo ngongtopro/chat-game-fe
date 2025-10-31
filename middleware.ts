@@ -3,13 +3,14 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('auth-token')?.value
-  const isAuthPage = request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register'
-  const isProtectedPage = request.nextUrl.pathname.startsWith('/dashboard') ||
-    request.nextUrl.pathname.startsWith('/chat') ||
-    request.nextUrl.pathname.startsWith('/farm') ||
-    request.nextUrl.pathname.startsWith('/wallet') ||
-    request.nextUrl.pathname.startsWith('/friends') ||
-    request.nextUrl.pathname.startsWith('/caro')
+  const pathname = request.nextUrl.pathname
+  const isAuthPage = pathname === '/login' || pathname === '/register'
+  const isProtectedPage = pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/chat') ||
+    pathname.startsWith('/farm') ||
+    pathname.startsWith('/wallet') ||
+    pathname.startsWith('/friends') ||
+    pathname.startsWith('/caro')
 
   // Nếu đã login và truy cập trang login/register, redirect về dashboard
   if (token && isAuthPage) {

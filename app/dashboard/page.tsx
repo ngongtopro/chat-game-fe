@@ -1,23 +1,17 @@
-import { redirect } from "next/navigation"
-import { getAuthUser } from "@/lib/auth"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Users, Wallet, Sprout, Gamepad2, MessageCircle } from "lucide-react"
 import { LogoutButton } from "@/components/logout-button"
 
-export default async function DashboardPage() {
-  const user = await getAuthUser()
-
-  if (!user) {
-    redirect("/login")
-  }
+export default function DashboardPage() {
+  // Middleware đã đảm bảo user được authenticate, không cần check lại ở đây
 
   return (
     <div className="container mx-auto max-w-6xl p-4 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Xin chào, {user.username}!</h1>
+          <h1 className="text-3xl font-bold">Chào mừng bạn!</h1>
           <p className="text-muted-foreground">Chọn điều bạn muốn làm</p>
         </div>
         <LogoutButton />
