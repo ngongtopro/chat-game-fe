@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation"
 import { getAuthUser } from "@/lib/auth"
 import { ChatWindow } from "@/components/chat-window"
-import { Card, CardContent } from "@/components/ui/card"
 
 export default async function ChatWithFriendPage({ params }: { params: Promise<{ friendId: string }> }) {
   const user = await getAuthUser()
@@ -17,7 +16,9 @@ export default async function ChatWithFriendPage({ params }: { params: Promise<{
   let friendData: any = null
   
   try {
-    const response = await fetch(`${API_URL}/api/friends/user/${friendId}`)
+    const response = await fetch(`${API_URL}/api/friends/user/${friendId}`, {
+      cache: 'no-store'
+    })
     
     if (!response.ok) {
       redirect("/chat")
@@ -34,16 +35,11 @@ export default async function ChatWithFriendPage({ params }: { params: Promise<{
   }
 
   return (
-    <div className="container mx-auto max-w-4xl p-4">
-      <Card>
-        <CardContent className="p-0">
-          <ChatWindow
-            friendId={Number.parseInt(friendId)}
-            friendUsername={friendData.username}
-            currentUserId={user.id}
-          />
-        </CardContent>
-      </Card>
-    </div>
+    <ChatWindow
+      friendId={Number.parseInt(friendId)}
+      friendUsername={friendData.username}
+      friendAvatar={friendData.avatar_url}
+      currentUserId={user.id}
+    />
   )
 }
