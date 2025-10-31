@@ -36,13 +36,17 @@ A full-stack social gaming platform with **Next.js frontend** and **Express.js b
 
 ### Prerequisites
 - Node.js 18+
-- PostgreSQL database
+- PostgreSQL database (local hoặc remote)
 
-### Backend Setup
+### Database Setup
+
+**Xem chi tiết trong [DATABASE_SETUP.md](./DATABASE_SETUP.md)**
+
+### Backend Setup (chat-game-be/)
 
 1. Navigate to backend directory:
 \`\`\`bash
-cd backend
+cd chat-game-be
 \`\`\`
 
 2. Install dependencies:
@@ -50,13 +54,17 @@ cd backend
 npm install
 \`\`\`
 
-3. Create `.env` file:
+3. Create `.env` file (copy từ `.env.example`):
 \`\`\`bash
-DATABASE_URL=your_postgres_connection_string
-JWT_SECRET=your_jwt_secret_key_change_this
-FRONTEND_URL=http://localhost:3000
+DB_HOST=100.64.192.68
+DB_PORT=5432
+DB_NAME=social_gaming
+DB_USER=your_database_user
+DB_PASSWORD=your_database_password
+JWT_SECRET=your-secret-key-change-this
 PORT=3001
 NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
 \`\`\`
 
 4. Run database migrations in your PostgreSQL:
@@ -79,8 +87,19 @@ Backend will run on http://localhost:3001
 npm install
 \`\`\`
 
-2. Create `.env.local` file:
+2. Create `.env.local` file (copy từ `.env.example`):
 \`\`\`bash
+# Database Configuration (PostgreSQL)
+DB_HOST=100.64.192.68
+DB_PORT=5432
+DB_NAME=social_gaming
+DB_USER=your_database_user
+DB_PASSWORD=your_database_password
+
+# JWT Secret (phải giống với backend)
+JWT_SECRET=your-secret-key-change-this
+
+# Backend API URL
 NEXT_PUBLIC_API_URL=http://localhost:3001
 \`\`\`
 
@@ -90,6 +109,8 @@ npm run dev
 \`\`\`
 
 4. Open http://localhost:3000
+
+⚠️ **Lưu ý**: JWT_SECRET phải giống nhau giữa frontend và backend!
 
 ## Usage
 
@@ -111,7 +132,7 @@ npm run dev
 **Backend:**
 - Node.js + Express.js (JavaScript)
 - Socket.io Server
-- PostgreSQL (via Neon)
+- PostgreSQL (native pg driver)
 - JWT Authentication
 - bcryptjs for password hashing
 

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Users, Wallet, Sprout, Gamepad2, MessageCircle } from "lucide-react"
+import { LogoutButton } from "@/components/logout-button"
 
 export default async function DashboardPage() {
   const user = await getAuthUser()
@@ -14,9 +15,12 @@ export default async function DashboardPage() {
 
   return (
     <div className="container mx-auto max-w-6xl p-4 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Welcome, {user.username}!</h1>
-        <p className="text-muted-foreground">Choose what you'd like to do</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Welcome, {user.username}!</h1>
+          <p className="text-muted-foreground">Choose what you'd like to do</p>
+        </div>
+        <LogoutButton />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

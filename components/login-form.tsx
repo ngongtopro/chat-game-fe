@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { apiRequest } from "@/lib/api"
+import { setToken } from "@/lib/auth-client"
 
 export function LoginForm() {
   const router = useRouter()
@@ -23,10 +24,15 @@ export function LoginForm() {
     setLoading(true)
 
     try {
-      await apiRequest("/api/auth/login", {
+      const response = await apiRequest("/api/auth/login", {
         method: "POST",
         body: JSON.stringify({ username, password }),
       })
+
+      // Lưu token vào cookie (expires: 7 ngày)
+      if (response.token) {
+        setToken(response.token, 7)
+      }
 
       router.push("/dashboard")
       router.refresh()
