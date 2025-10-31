@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Social Gaming Platform
 
-## Getting Started
+A full-stack social gaming platform with **Next.js frontend** and **Express.js backend (Node.js + JavaScript)**, featuring real-time multiplayer games, chat, and virtual economy.
 
-First, run the development server:
+## Features
 
-```bash
+- **User Authentication**: Register, login, and secure JWT-based authentication
+- **Friend System**: Search users, send/accept friend requests
+- **Wallet System**: Virtual currency with deposits, withdrawals, and transaction history
+- **Happy Farm**: 10x10 grid farming game to earn money
+- **Caro Game**: Multiplayer betting game with expandable board
+- **Real-time Chat**: Direct messaging with friends
+- **Socket.io**: Real-time updates across all features
+
+## Project Structure
+
+\`\`\`
+├── backend/              # Express.js backend (Node.js + JavaScript)
+│   ├── src/
+│   │   ├── server.js    # Main server file
+│   │   ├── socket.js    # Socket.io handlers
+│   │   ├── db.js        # Database connection
+│   │   ├── auth.js      # Authentication utilities
+│   │   └── routes/      # API routes (all .js files)
+│   └── package.json
+├── app/                  # Next.js frontend pages
+├── components/           # React components
+├── lib/                  # Utilities
+│   ├── api.ts           # API client
+│   └── socket-client.ts # Socket.io client
+├── scripts/             # Database SQL scripts
+└── types/               # TypeScript types
+\`\`\`
+
+## Setup
+
+### Prerequisites
+- Node.js 18+
+- PostgreSQL database
+
+### Backend Setup
+
+1. Navigate to backend directory:
+\`\`\`bash
+cd backend
+\`\`\`
+
+2. Install dependencies:
+\`\`\`bash
+npm install
+\`\`\`
+
+3. Create `.env` file:
+\`\`\`bash
+DATABASE_URL=your_postgres_connection_string
+JWT_SECRET=your_jwt_secret_key_change_this
+FRONTEND_URL=http://localhost:3000
+PORT=3001
+NODE_ENV=development
+\`\`\`
+
+4. Run database migrations in your PostgreSQL:
+\`\`\`bash
+# Run scripts/001_initial_schema.sql
+# Run scripts/002_seed_plants.sql
+\`\`\`
+
+5. Start backend server:
+\`\`\`bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+\`\`\`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Backend will run on http://localhost:3001
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Frontend Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Install dependencies (from root):
+\`\`\`bash
+npm install
+\`\`\`
 
-## Learn More
+2. Create `.env.local` file:
+\`\`\`bash
+NEXT_PUBLIC_API_URL=http://localhost:3001
+\`\`\`
 
-To learn more about Next.js, take a look at the following resources:
+3. Start frontend:
+\`\`\`bash
+npm run dev
+\`\`\`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4. Open http://localhost:3000
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Usage
 
-## Deploy on Vercel
+1. Register a new account at `/register`
+2. Login at `/login`
+3. Access dashboard to see all features
+4. Add friends, play games, chat, and manage your wallet
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Tech Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Frontend:**
+- Next.js 15 (App Router)
+- React 19
+- TypeScript
+- Tailwind CSS
+- Socket.io Client
+- shadcn/ui components
+
+**Backend:**
+- Node.js + Express.js (JavaScript)
+- Socket.io Server
+- PostgreSQL (via Neon)
+- JWT Authentication
+- bcryptjs for password hashing
+
+## API Documentation
+
+See `backend/README.md` for detailed API documentation.
