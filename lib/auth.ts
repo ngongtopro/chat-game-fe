@@ -12,21 +12,39 @@ export interface AuthUser {
 export async function getAuthUser(): Promise<AuthUser | null> {
   try {
     const cookieStore = await cookies()
-    const token = cookieStore.get("auth-token")
+    const token = cookieStore.get("token") // Backend uses "token" not "auth-token"
 
     if (!token) {
       console.log("No auth token found")
       return null
     }
 
-    // Verify token locally first - không cần gọi API để tránh vấn đề
-    const decoded = jwt.verify(token.value, JWT_SECRET) as any
-    
-    // Trả về mock user data dựa trên token để tránh infinite loop
-    return {
-      id: decoded.userId || decoded.id,
-      username: "User", // Mock data tạm thời
-      email: "user@example.com"
+    try {
+      // Verify token locally
+      const decoded = jwt.verify(token.value, JWT_SECRET) as any
+      
+      // Nếu token hợp lệ, gọi API để lấy thông tin user
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+      const response = await fetch(`${API_URL}/api/auth/me`, {
+        headers: {
+          'Cookie': `token=${token.value}`
+        },
+        cache: 'no-store'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        return data.user
+      }
+      
+      // Nếu API fail, trả về null
+      console.log("Failed to fetch user from API")
+      return null
+      
+    } catch (jwtError) {
+      // Token không hợp lệ hoặc expired
+      console.log("Invalid token:", jwtError instanceof Error ? jwtError.message : "Unknown error")
+      return null
     }
   } catch (error) {
     console.error("Auth error:", error)

@@ -27,6 +27,7 @@ export interface Transaction {
   amount: number
   type: "deposit" | "withdraw" | "game_win" | "game_loss" | "farm_harvest"
   source: string
+  description?: string
   created_at: string
 }
 
