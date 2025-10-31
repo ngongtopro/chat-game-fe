@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation"
 import { getAuthUser } from "@/lib/auth"
-import sql from "@/lib/db"
 import { ChatWindow } from "@/components/chat-window"
 import { Card, CardContent } from "@/components/ui/card"
 
@@ -13,12 +12,24 @@ export default async function ChatWithFriendPage({ params }: { params: Promise<{
 
   const { friendId } = await params
 
-  // Get friend details
-  const friends = await sql`
-    SELECT id, username FROM users WHERE id = ${friendId}
-  `
-
-  if (friends.length === 0) {
+  // Get friend details from backend API
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+  let friendData: any = null
+  
+  try {
+    const response = await fetch(`${API_URL}/api/friends/user/${friendId}`)
+    
+    if (!response.ok) {
+      redirect("/chat")
+    }
+    
+    friendData = await response.json()
+    
+    if (!friendData) {
+      redirect("/chat")
+    }
+  } catch (error) {
+    console.error("Error fetching friend details:", error)
     redirect("/chat")
   }
 
@@ -28,7 +39,7 @@ export default async function ChatWithFriendPage({ params }: { params: Promise<{
         <CardContent className="p-0">
           <ChatWindow
             friendId={Number.parseInt(friendId)}
-            friendUsername={friends[0].username}
+            friendUsername={friendData.username}
             currentUserId={user.id}
           />
         </CardContent>

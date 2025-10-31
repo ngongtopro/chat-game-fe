@@ -17,8 +17,8 @@ export default async function DashboardPage() {
     <div className="container mx-auto max-w-6xl p-4 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Welcome, {user.username}!</h1>
-          <p className="text-muted-foreground">Choose what you'd like to do</p>
+          <h1 className="text-3xl font-bold">Xin chào, {user.username}!</h1>
+          <p className="text-muted-foreground">Chọn điều bạn muốn làm</p>
         </div>
         <LogoutButton />
       </div>
@@ -28,13 +28,13 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="size-5" />
-              Friends
+              Bạn bè
             </CardTitle>
-            <CardDescription>Find and chat with friends</CardDescription>
+            <CardDescription>Tìm và trò chuyện với bạn bè</CardDescription>
           </CardHeader>
           <CardContent>
             <Link href="/friends">
-              <Button className="w-full">Manage Friends</Button>
+              <Button className="w-full">Quản lý bạn bè</Button>
             </Link>
           </CardContent>
         </Card>
@@ -43,13 +43,13 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageCircle className="size-5" />
-              Messages
+              Tin nhắn
             </CardTitle>
-            <CardDescription>Chat with your friends</CardDescription>
+            <CardDescription>Trò chuyện với bạn bè của bạn</CardDescription>
           </CardHeader>
           <CardContent>
             <Link href="/chat">
-              <Button className="w-full">Open Chat</Button>
+              <Button className="w-full">Mở trò chuyện</Button>
             </Link>
           </CardContent>
         </Card>
@@ -58,13 +58,13 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Wallet className="size-5" />
-              Wallet
+              Ví
             </CardTitle>
-            <CardDescription>Manage your money</CardDescription>
+            <CardDescription>Quản lý tiền của bạn</CardDescription>
           </CardHeader>
           <CardContent>
             <Link href="/wallet">
-              <Button className="w-full">View Wallet</Button>
+              <Button className="w-full">Xem ví</Button>
             </Link>
           </CardContent>
         </Card>
@@ -73,13 +73,13 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sprout className="size-5" />
-              Happy Farm
+              Nông trại vui vẻ
             </CardTitle>
-            <CardDescription>Plant and harvest crops</CardDescription>
+            <CardDescription>Trồng và thu hoạch cây trồng</CardDescription>
           </CardHeader>
           <CardContent>
             <Link href="/farm">
-              <Button className="w-full">Go to Farm</Button>
+              <Button className="w-full">Đi đến Nông trại</Button>
             </Link>
           </CardContent>
         </Card>
@@ -88,13 +88,13 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Gamepad2 className="size-5" />
-              Caro Game
+              Game Caro
             </CardTitle>
-            <CardDescription>Play and win money</CardDescription>
+            <CardDescription>Chơi và giành chiến thắng</CardDescription>
           </CardHeader>
           <CardContent>
             <Link href="/caro">
-              <Button className="w-full">Play Caro</Button>
+              <Button className="w-full">Chơi cờ Caro</Button>
             </Link>
           </CardContent>
         </Card>

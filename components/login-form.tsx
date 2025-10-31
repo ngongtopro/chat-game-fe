@@ -37,7 +37,7 @@ export function LoginForm() {
       router.push("/dashboard")
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred. Please try again.")
+      setError(err instanceof Error ? err.message : "Có lỗi. Hãy thử lại.")
     } finally {
       setLoading(false)
     }
@@ -46,17 +46,17 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Login</CardTitle>
-        <CardDescription>Enter your credentials to access your account</CardDescription>
+        <CardTitle>Đăng nhập</CardTitle>
+        <CardDescription>Nhập thông tin tài khoản của bạn để truy cập</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
+            <Label htmlFor="username">Tên đăng nhập</Label>
             <Input id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Mật khẩu</Label>
             <Input
               id="password"
               type="password"
@@ -67,7 +67,7 @@ export function LoginForm() {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </Button>
         </form>
       </CardContent>

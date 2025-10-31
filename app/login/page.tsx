@@ -7,9 +7,9 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-4">
         <LoginForm />
         <p className="text-center text-sm text-muted-foreground">
-          {"Don't have an account? "}
+          {"Bạn không có tài khoản? "}
           <Link href="/register" className="text-primary hover:underline font-medium">
-            Register here
+            Đăng kí tại đây
           </Link>
         </p>
       </div>

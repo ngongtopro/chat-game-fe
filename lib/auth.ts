@@ -1,6 +1,5 @@
 import { cookies } from "next/headers"
 import jwt from "jsonwebtoken"
-import sql from "@/lib/db"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this"
 
@@ -22,22 +21,26 @@ export async function getAuthUser(): Promise<AuthUser | null> {
     // Verify token
     const decoded = jwt.verify(token.value, JWT_SECRET) as any
     
-    // Lấy thông tin user từ database
+    // Lấy thông tin user từ backend API
     const userId = decoded.userId || decoded.id
-    const users = await sql`
-      SELECT id, username, email
-      FROM users
-      WHERE id = ${userId}
-    `
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+    
+    const response = await fetch(`${API_URL}/api/auth/user/${userId}`, {
+      headers: {
+        "Authorization": `Bearer ${token.value}`
+      }
+    })
 
-    if (users.length === 0) {
+    if (!response.ok) {
       return null
     }
 
+    const userData = await response.json()
+    
     return {
-      id: users[0].id,
-      username: users[0].username,
-      email: users[0].email
+      id: userData.id,
+      username: userData.username,
+      email: userData.email
     }
   } catch (error) {
     console.error("Auth error:", error)
