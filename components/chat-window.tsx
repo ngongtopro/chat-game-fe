@@ -51,12 +51,32 @@ export function ChatWindow({ friendId, friendUsername, currentUserId, friendAvat
     fetchMessages()
 
     const socket = getSocket()
+    
+    // Join the chat room
     socket.emit("join-chat", chatId)
+    console.log(`[Chat] Joined chat room: ${chatId}`)
 
+    // Listen for new messages
     socket.on("message-received", (message: ChatMessage) => {
-      setMessages((prev) => [...prev, message])
+      console.log("[Chat] Received message:", message)
+      setMessages((prev) => {
+        // Avoid duplicates
+        if (prev.find(m => m.id === message.id)) {
+          return prev
+        }
+        return [...prev, message]
+      })
+      
+      // Mark as read if we're in this chat
+      if (message.sender_id === friendId) {
+        apiRequest("/api/chat/mark-read", {
+          method: "POST",
+          body: JSON.stringify({ friendId }),
+        }).catch(console.error)
+      }
     })
 
+    // Listen for typing indicator
     socket.on("user-typing", () => {
       setIsTyping(true)
       setTimeout(() => setIsTyping(false), 3000)
@@ -66,6 +86,7 @@ export function ChatWindow({ friendId, friendUsername, currentUserId, friendAvat
       socket.emit("leave-chat", chatId)
       socket.off("message-received")
       socket.off("user-typing")
+      console.log(`[Chat] Left chat room: ${chatId}`)
     }
   }, [friendId, chatId])
 
@@ -87,10 +108,13 @@ export function ChatWindow({ friendId, friendUsername, currentUserId, friendAvat
         body: JSON.stringify({ receiverId: friendId, message: tempMessage }),
       })
 
+      // Add message to local state immediately
       setMessages((prev) => [...prev, data.message])
 
+      // Send to socket for real-time delivery to other user
       const socket = getSocket()
       socket.emit("send-message", { chatId, message: data.message })
+      console.log("[Chat] Message sent via socket")
 
     } catch (error) {
       console.error("[v0] Send message error:", error)
