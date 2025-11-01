@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { MessageCircle, Clock } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -18,11 +17,20 @@ interface Conversation {
   last_message_time?: string
 }
 
-export function ConversationList() {
-  const router = useRouter()
+interface SelectedFriend {
+  id: number
+  username: string
+  avatar_url?: string
+}
+
+interface ConversationListProps {
+  selectedFriendId: number | null
+  onSelectFriend: (friend: SelectedFriend) => void
+}
+
+export function ConversationList({ selectedFriendId, onSelectFriend }: ConversationListProps) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedId, setSelectedId] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -57,9 +65,12 @@ export function ConversationList() {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
-  const handleConversationClick = (friendId: number) => {
-    setSelectedId(friendId)
-    router.push(`/chat/${friendId}`)
+  const handleConversationClick = (conv: Conversation) => {
+    onSelectFriend({
+      id: conv.friend_id,
+      username: conv.username,
+      avatar_url: conv.avatar_url
+    })
   }
 
   if (loading) {
@@ -95,10 +106,10 @@ export function ConversationList() {
         {conversations.map((conv) => (
           <div
             key={conv.friend_id}
-            onClick={() => handleConversationClick(conv.friend_id)}
+            onClick={() => handleConversationClick(conv)}
             className={cn(
               "flex items-center gap-3 p-4 cursor-pointer transition-colors hover:bg-accent",
-              selectedId === conv.friend_id && "bg-accent"
+              selectedFriendId === conv.friend_id && "bg-accent"
             )}
           >
             {/* Avatar */}

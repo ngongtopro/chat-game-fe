@@ -9,6 +9,7 @@ export interface AuthUser {
   email: string
 }
 
+// Server-side auth function (for Server Components only)
 export async function getAuthUser(): Promise<AuthUser | null> {
   try {
     const cookieStore = await cookies()
