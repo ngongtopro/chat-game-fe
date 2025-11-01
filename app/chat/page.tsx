@@ -7,6 +7,7 @@ import { MessageSquare, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { apiRequest } from "@/lib/api"
 import { getAuthUser } from "@/lib/auth-client"
+import { ProtectedRoute } from "@/components/protected-route"
 
 interface SelectedFriend {
   id: number
@@ -37,6 +38,7 @@ export default function ChatPage() {
   }
 
   return (
+    <ProtectedRoute>
     <div className="flex h-screen bg-background">
       {/* Sidebar - Conversation List */}
       <div className="w-full md:w-96 border-r flex flex-col">
@@ -92,5 +94,6 @@ export default function ChatPage() {
         </div>
       )}
     </div>
+    </ProtectedRoute>
   )
 }

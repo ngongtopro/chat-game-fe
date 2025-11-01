@@ -14,6 +14,7 @@ export default function HomePage() {
 
   useEffect(() => {
     setIsLoggedIn(isAuthenticated())
+    console.log("User is logged in:", isAuthenticated())
   }, [])
 
   return (

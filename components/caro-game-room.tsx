@@ -9,12 +9,15 @@ import { CaroBoard } from "./caro-board"
 import { RoomChat } from "./room-chat"
 import { PlayerStatsTooltip } from "./player-stats-tooltip"
 import { apiRequest } from "@/lib/api"
+import { getSocket } from "@/lib/socket-client"
 
 interface RoomData {
   id: number
   room_code: string
   player1_id: number
   player2_id?: number
+  player1_ready?: boolean
+  player2_ready?: boolean
   bet_amount: number
   status: string
   winner_id?: number
@@ -40,6 +43,7 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
   const router = useRouter()
   const [room, setRoom] = useState<RoomData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isReady, setIsReady] = useState(false)
 
   const fetchRoom = async () => {
     try {
@@ -54,29 +58,84 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
 
   useEffect(() => {
     fetchRoom()
-    const interval = setInterval(fetchRoom, 2000)
-    return () => clearInterval(interval)
+
+    // Join room socket
+    const socket = getSocket()
+    socket.emit("caro:join-room", roomCode)
+    console.log(`[Caro] Joined room ${roomCode}`)
+
+    // Listen for room updates (player joined)
+    socket.on("caro:room-updated", (updatedRoom: RoomData) => {
+      console.log("[Caro] Room updated:", updatedRoom)
+      setRoom(updatedRoom)
+    })
+
+    // Listen for player ready
+    socket.on("caro:player-ready", (data: { playerId: number, player1Ready: boolean, player2Ready: boolean }) => {
+      console.log("[Caro] Player ready:", data)
+      setRoom(prev => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          player1_ready: data.player1Ready,
+          player2_ready: data.player2Ready
+        }
+      })
+      if (data.playerId === currentUserId) {
+        setIsReady(true)
+      }
+    })
+
+    // Listen for game started
+    socket.on("caro:game-started", (updatedRoom: RoomData) => {
+      console.log("[Caro] Game started:", updatedRoom)
+      setRoom(updatedRoom)
+    })
+
+    // Listen for moves
+    socket.on("caro:move-made", (data: { x: number, y: number, player: number, board: any }) => {
+      console.log("[Caro] Move made:", data)
+      setRoom(prev => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          board_state: JSON.stringify(data.board),
+          current_turn: prev.current_turn === 1 ? 2 : 1
+        }
+      })
+    })
+
+    // Listen for game finished
+    socket.on("caro:game-finished", (data: { winner: number, winnings?: number }) => {
+      console.log("[Caro] Game finished:", data)
+      const playerNumber = room?.player1_id === currentUserId ? 1 : 2
+      setTimeout(() => {
+        alert(
+          `Game finished! ${data.winner === playerNumber ? "You won!" : "You lost!"} ${data.winnings ? `Earned $${data.winnings.toFixed(2)}` : ""}`
+        )
+        router.push("/caro")
+      }, 500)
+    })
+
+    return () => {
+      socket.emit("caro:leave-room", roomCode)
+      socket.off("caro:room-updated")
+      socket.off("caro:player-ready")
+      socket.off("caro:game-started")
+      socket.off("caro:move-made")
+      socket.off("caro:game-finished")
+      console.log(`[Caro] Left room ${roomCode}`)
+    }
   }, [roomCode])
 
   const handleMove = async (x: number, y: number) => {
-    try {
-      const data = await apiRequest("/api/caro/move", {
-        method: "POST",
-        body: JSON.stringify({ roomCode, x, y, player: playerNumber }),
-      })
+    // Not needed anymore, handled in CaroBoard
+  }
 
-      if (data.winner) {
-        alert(
-          `Game finished! ${data.winner === playerNumber ? "You won!" : "You lost!"} ${data.winnings ? `Earned $${data.winnings}` : ""}`,
-        )
-        router.push("/caro")
-      } else {
-        fetchRoom()
-      }
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to make move")
-      console.error("[v0] Move error:", error)
-    }
+  const handleReady = () => {
+    const socket = getSocket()
+    socket.emit("caro:player-ready", { roomCode })
+    console.log("[Caro] Player ready")
   }
 
   const copyRoomCode = () => {
@@ -93,7 +152,10 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
   }
 
   const playerNumber = room.player1_id === currentUserId ? 1 : room.player2_id === currentUserId ? 2 : 0
-  const boardState = room.board_state ? JSON.parse(room.board_state) : {}
+  const boardState = room.board_state || {}
+  const bothPlayersPresent = room.player1_id && room.player2_id
+  const waitingForReady = bothPlayersPresent && room.status === "waiting"
+  const canReady = waitingForReady && !isReady
 
   return (
     <div className="space-y-6">
@@ -111,8 +173,13 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Game Board</span>
-                {room.status === "waiting" && (
+                {room.status === "waiting" && !bothPlayersPresent && (
                   <span className="text-sm text-muted-foreground">Waiting for player 2...</span>
+                )}
+                {waitingForReady && (
+                  <span className="text-sm text-muted-foreground">
+                    Waiting for players to ready up... ({(room.player1_ready ? 1 : 0) + (room.player2_ready ? 1 : 0)}/2)
+                  </span>
                 )}
                 {room.status === "playing" && (
                   <span className="text-sm">
@@ -128,8 +195,33 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {room.status === "waiting" ? (
+              {room.status === "waiting" && !bothPlayersPresent ? (
                 <div className="text-center p-12 text-muted-foreground">Waiting for another player to join...</div>
+              ) : waitingForReady ? (
+                <div className="text-center p-12 space-y-4">
+                  <p className="text-muted-foreground">Both players have joined!</p>
+                  <p className="text-sm text-muted-foreground">
+                    Click "Ready" to start the game when you're ready.
+                  </p>
+                  <Button 
+                    onClick={handleReady} 
+                    disabled={!canReady}
+                    variant={isReady ? "secondary" : "default"}
+                    className="min-w-[150px]"
+                  >
+                    {isReady ? "✓ Ready" : "Ready"}
+                  </Button>
+                  <div className="flex items-center justify-center gap-6 pt-4">
+                    <div className="flex items-center gap-2">
+                      <div className={`size-3 rounded-full ${room.player1_ready ? "bg-green-500" : "bg-gray-400"}`} />
+                      <span className="text-sm">{room.player1_username}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`size-3 rounded-full ${room.player2_ready ? "bg-green-500" : "bg-gray-400"}`} />
+                      <span className="text-sm">{room.player2_username}</span>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <CaroBoard
                   roomCode={roomCode}
@@ -137,7 +229,6 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
                   currentTurn={room.current_turn}
                   playerNumber={playerNumber}
                   onMove={handleMove}
-                  disabled={room.status === "finished"}
                 />
               )}
             </CardContent>

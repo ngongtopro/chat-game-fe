@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { isAuthenticated } from "@/lib/auth-client"
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value // Changed from 'auth-token' to 'token'

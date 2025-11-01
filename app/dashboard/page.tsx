@@ -1,13 +1,15 @@
+"use client"
+
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Users, Wallet, Sprout, Gamepad2, MessageCircle } from "lucide-react"
 import { LogoutButton } from "@/components/logout-button"
+import { ProtectedRoute } from "@/components/protected-route"
 
 export default function DashboardPage() {
-  // Middleware đã đảm bảo user được authenticate, không cần check lại ở đây
-
   return (
+    <ProtectedRoute>
     <div className="container mx-auto max-w-6xl p-4 space-y-6">
       <div className="flex justify-between items-center">
         <div>
@@ -94,5 +96,6 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
+    </ProtectedRoute>
   )
 }

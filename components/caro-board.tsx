@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { X, Circle } from "lucide-react"
 import { getSocket } from "@/lib/socket-client"
+import { apiRequest } from "@/lib/api"
 
 interface CaroBoardProps {
   roomCode: string
@@ -25,7 +26,7 @@ export function CaroBoard({ roomCode, boardState, currentTurn, playerNumber, onM
     // Calculate board bounds based on moves
     const keys = Object.keys(boardState)
     if (keys.length > 0) {
-      const coords = keys.map((k) => k.split(",").map(Number))
+      const coords = keys.map((k) => k.split("-").map(Number))
       const xs = coords.map((c) => c[0])
       const ys = coords.map((c) => c[1])
 
@@ -36,33 +37,38 @@ export function CaroBoard({ roomCode, boardState, currentTurn, playerNumber, onM
     }
   }, [boardState])
 
-  useEffect(() => {
-    const socket = getSocket()
-    socket.emit("join-caro-room", roomCode)
-
-    socket.on("caro-move-made", (data: { x: number; y: number; player: number }) => {
-      setBoard((prev) => ({ ...prev, [`${data.x},${data.y}`]: data.player }))
-    })
-
-    return () => {
-      socket.emit("leave-caro-room", roomCode)
-      socket.off("caro-move-made")
-    }
-  }, [roomCode])
-
-  const handleCellClick = (x: number, y: number) => {
+  const handleCellClick = async (x: number, y: number) => {
     if (currentTurn !== playerNumber) return
-    if (board[`${x},${y}`]) return
+    if (board[`${x}-${y}`]) return
 
-    onMove(x, y)
+    // Optimistically update local board
+    const newBoard = { ...board, [`${x}-${y}`]: playerNumber }
+    setBoard(newBoard)
 
-    // Emit move via socket
-    const socket = getSocket()
-    socket.emit("caro-move", { roomCode, x, y, player: playerNumber })
+    // Send move to server
+    try {
+      const data = await apiRequest("/api/caro/move", {
+        method: "POST",
+        body: JSON.stringify({ roomCode, x, y, player: playerNumber }),
+      })
+
+      // Emit move via socket for realtime update to opponent
+      const socket = getSocket()
+      socket.emit("caro:move", { roomCode, x, y, player: playerNumber, board: newBoard })
+
+      // Check if game over
+      if (data.winner) {
+        socket.emit("caro:game-over", { roomCode, winner: data.winner, winnings: data.winnings })
+      }
+    } catch (error) {
+      // Revert optimistic update on error
+      setBoard(board)
+      alert(error instanceof Error ? error.message : "Failed to make move")
+    }
   }
 
   const renderCell = (x: number, y: number) => {
-    const key = `${x},${y}`
+    const key = `${x}-${y}`
     const value = board[key]
 
     return (

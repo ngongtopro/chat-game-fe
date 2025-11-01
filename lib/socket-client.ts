@@ -1,37 +1,34 @@
 "use client"
 
 import { io, type Socket } from "socket.io-client"
+import { getToken } from "./auth-client"
 
 let socket: Socket | null = null
-
-function getTokenFromCookie(): string | undefined {
-  if (typeof document === "undefined") return undefined
-  
-  const token = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("token="))
-    ?.split("=")[1]
-  
-  return token
-}
+let isInitialized = false
 
 export function getSocket(): Socket {
-  if (!socket || !socket.connected) {
+  // Return existing socket if already initialized
+  if (socket && isInitialized) {
+    return socket
+  }
+
+  // Initialize socket only once
+  if (!isInitialized) {
     const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
-    const token = getTokenFromCookie()
+    const token = getToken()
     
     if (!token) {
-      console.log("[Socket] No token in document.cookie (might be httpOnly cookie, that's OK)")
+      console.warn("[Socket] No token found - authentication may fail")
     } else {
-      console.log("[Socket] Found token in cookie")
+      console.log("[Socket] Found token, initializing with authentication")
     }
     
-    console.log("[Socket] Initializing socket connection")
+    console.log("[Socket] Initializing socket connection (one-time)")
     
     socket = io(SOCKET_URL, {
-      withCredentials: true, // This sends httpOnly cookies automatically
+      withCredentials: true, // Send cookies with requests
       auth: token ? {
-        token: token, // Send token if available (non-httpOnly)
+        token: token, // Send token for authentication
       } : {},
       autoConnect: true,
       reconnection: true,
@@ -49,6 +46,7 @@ export function getSocket(): Socket {
 
     socket.on("disconnect", (reason) => {
       console.log("[Socket] Disconnected:", reason)
+      // Don't reset isInitialized - allow reconnection with same socket instance
     })
 
     socket.on("force-disconnect", (data: { reason: string }) => {
@@ -59,13 +57,18 @@ export function getSocket(): Socket {
         window.location.href = "/login"
       }
     })
+
+    isInitialized = true
   }
-  return socket
+
+  return socket!
 }
 
 export function disconnectSocket() {
   if (socket) {
+    console.log("[Socket] Manual disconnect")
     socket.disconnect()
     socket = null
+    isInitialized = false
   }
 }

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { apiRequest } from "@/lib/api"
+import { getSocket } from "@/lib/socket-client"
 
 interface Room {
   id: number
@@ -35,8 +36,30 @@ export function CaroLobby() {
 
   useEffect(() => {
     fetchRooms()
-    const interval = setInterval(fetchRooms, 5000)
-    return () => clearInterval(interval)
+
+    // Join caro lobby socket room
+    const socket = getSocket()
+    socket.emit("caro:join-lobby")
+    console.log("[Caro] Joined lobby")
+
+    // Listen for new rooms
+    socket.on("caro:room-created", (room: Room) => {
+      console.log("[Caro] New room created:", room)
+      setRooms(prev => [room, ...prev])
+    })
+
+    // Listen for room started (remove from list)
+    socket.on("caro:room-started", (data: { roomCode: string }) => {
+      console.log("[Caro] Room started:", data.roomCode)
+      setRooms(prev => prev.filter(r => r.room_code !== data.roomCode))
+    })
+
+    return () => {
+      socket.emit("caro:leave-lobby")
+      socket.off("caro:room-created")
+      socket.off("caro:room-started")
+      console.log("[Caro] Left lobby")
+    }
   }, [])
 
   const handleCreateRoom = async () => {
