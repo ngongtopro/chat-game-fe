@@ -4,28 +4,33 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { LogOut } from "lucide-react"
 import { removeToken } from "@/lib/auth-client"
+import { disconnectSocket } from "@/lib/socket-client"
+import { apiRequest } from "@/lib/api"
 
 export function LogoutButton() {
   const router = useRouter()
 
   const handleLogout = async () => {
     try {
-      // Xóa token từ cookie
-      removeToken()
+      // Disconnect socket first
+      disconnectSocket()
       
-      // Gọi API logout (nếu cần)
-      await fetch("/api/auth/logout", {
+      // Call logout API to clear backend cookie
+      await apiRequest("/api/auth/logout", {
         method: "POST",
-      }).catch(() => {
-        // Ignore errors
+      }).catch(err => {
+        console.error("Logout API error:", err)
       })
+      
+      // Remove client-side token
+      removeToken()
 
-      // Redirect về trang login
+      // Redirect to login
       router.push("/login")
       router.refresh()
     } catch (error) {
       console.error("Logout error:", error)
-      // Vẫn redirect về login dù có lỗi
+      // Still redirect even on error
       router.push("/login")
     }
   }

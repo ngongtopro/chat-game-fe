@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { apiRequest } from "@/lib/api"
+import { getSocket } from "@/lib/socket-client"
 import { cn } from "@/lib/utils"
 
 interface Conversation {
@@ -30,6 +31,7 @@ interface ConversationListProps {
 
 export function ConversationList({ selectedFriendId, onSelectFriend }: ConversationListProps) {
   const [conversations, setConversations] = useState<Conversation[]>([])
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<number>>(new Set())
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -44,9 +46,44 @@ export function ConversationList({ selectedFriendId, onSelectFriend }: Conversat
       }
     }
 
+    const fetchOnlineUsers = async () => {
+      try {
+        const data = await apiRequest("/api/chat/online-users")
+        setOnlineUserIds(new Set(data.onlineUsers || []))
+      } catch (error) {
+        console.error("[v0] Fetch online users error:", error)
+      }
+    }
+
     fetchConversations()
+    fetchOnlineUsers()
+    
     const interval = setInterval(fetchConversations, 5000)
     return () => clearInterval(interval)
+  }, [])
+
+  // Listen to socket events for online/offline status
+  useEffect(() => {
+    const socket = getSocket()
+
+    socket.on("user-online", (data: { userId: number }) => {
+      console.log(`[ConversationList] User ${data.userId} is now online`)
+      setOnlineUserIds(prev => new Set(prev).add(data.userId))
+    })
+
+    socket.on("user-offline", (data: { userId: number }) => {
+      console.log(`[ConversationList] User ${data.userId} is now offline`)
+      setOnlineUserIds(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(data.userId)
+        return newSet
+      })
+    })
+
+    return () => {
+      socket.off("user-online")
+      socket.off("user-offline")
+    }
   }, [])
 
   const formatTime = (timestamp?: string) => {
@@ -120,8 +157,10 @@ export function ConversationList({ selectedFriendId, onSelectFriend }: Conversat
                   {conv.username[0].toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              {/* Online indicator */}
-              <div className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-2 border-background" />
+              {/* Online indicator - only show if user is online */}
+              {onlineUserIds.has(conv.friend_id) && (
+                <div className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-2 border-background" />
+              )}
             </div>
 
             {/* Content */}

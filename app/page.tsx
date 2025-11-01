@@ -1,21 +1,41 @@
+"use client"
+
 import Link from "next/link"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Gamepad2, Users, Wallet, Sprout } from "lucide-react"
+import { isAuthenticated } from "@/lib/auth-client"
 
 export default function HomePage() {
+  const router = useRouter()
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    setIsLoggedIn(isAuthenticated())
+  }, [])
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
         <div className="container mx-auto flex items-center justify-between p-4">
           <h1 className="text-2xl font-bold">Nền tảng game xã hội</h1>
           <div className="flex gap-2">
-            <Link href="/login">
-              <Button variant="outline">Đăng nhập</Button>
-            </Link>
-            <Link href="/register">
-              <Button>Đăng ký</Button>
-            </Link>
+            {isLoggedIn ? (
+              <Link href="/dashboard">
+                <Button>Vào Dashboard</Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="outline">Đăng nhập</Button>
+                </Link>
+                <Link href="/register">
+                  <Button>Đăng ký</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -27,14 +47,22 @@ export default function HomePage() {
             Tham gia vui chơi, trò chuyện.
           </p>
           <div className="flex gap-4 justify-center pt-4">
-            <Link href="/register">
-              <Button size="lg">Bắt đầu</Button>
-            </Link>
-            <Link href="/login">
-              <Button size="lg" variant="outline">
-                Đăng nhập
-              </Button>
-            </Link>
+            {isLoggedIn ? (
+              <Link href="/dashboard">
+                <Button size="lg">Vào Dashboard</Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/register">
+                  <Button size="lg">Bắt đầu</Button>
+                </Link>
+                <Link href="/login">
+                  <Button size="lg" variant="outline">
+                    Đăng nhập
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </section>
 

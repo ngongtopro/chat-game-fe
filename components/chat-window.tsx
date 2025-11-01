@@ -25,6 +25,7 @@ export function ChatWindow({ friendId, friendUsername, currentUserId, friendAvat
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(true)
   const [isTyping, setIsTyping] = useState(false)
+  const [isOnline, setIsOnline] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -56,6 +57,13 @@ export function ChatWindow({ friendId, friendUsername, currentUserId, friendAvat
     socket.emit("join-chat", chatId)
     console.log(`[Chat] Joined chat room: ${chatId}`)
 
+    // Check if friend is online initially
+    apiRequest("/api/chat/online-users")
+      .then(data => {
+        setIsOnline(data.onlineUsers?.includes(friendId) || false)
+      })
+      .catch(console.error)
+
     // Listen for new messages
     socket.on("message-received", (message: ChatMessage) => {
       console.log("[Chat] Received message:", message)
@@ -82,10 +90,27 @@ export function ChatWindow({ friendId, friendUsername, currentUserId, friendAvat
       setTimeout(() => setIsTyping(false), 3000)
     })
 
+    // Listen for friend online/offline status
+    socket.on("user-online", (data: { userId: number }) => {
+      if (data.userId === friendId) {
+        setIsOnline(true)
+        console.log(`[Chat] Friend ${friendId} is now online`)
+      }
+    })
+
+    socket.on("user-offline", (data: { userId: number }) => {
+      if (data.userId === friendId) {
+        setIsOnline(false)
+        console.log(`[Chat] Friend ${friendId} is now offline`)
+      }
+    })
+
     return () => {
       socket.emit("leave-chat", chatId)
       socket.off("message-received")
       socket.off("user-typing")
+      socket.off("user-online")
+      socket.off("user-offline")
       console.log(`[Chat] Left chat room: ${chatId}`)
     }
   }, [friendId, chatId])
@@ -193,13 +218,15 @@ export function ChatWindow({ friendId, friendUsername, currentUserId, friendAvat
               {friendAvatar && <AvatarImage src={friendAvatar} />}
               <AvatarFallback>{friendUsername[0].toUpperCase()}</AvatarFallback>
             </Avatar>
-            <div className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-2 border-background" />
+            {isOnline && (
+              <div className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-2 border-background" />
+            )}
           </div>
           
           <div>
             <p className="font-semibold">{friendUsername}</p>
             <p className="text-xs text-muted-foreground">
-              {isTyping ? "Typing..." : "Online"}
+              {isTyping ? "Typing..." : isOnline ? "Online" : "Offline"}
             </p>
           </div>
         </div>

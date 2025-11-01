@@ -50,6 +50,15 @@ export function getSocket(): Socket {
     socket.on("disconnect", (reason) => {
       console.log("[Socket] Disconnected:", reason)
     })
+
+    socket.on("force-disconnect", (data: { reason: string }) => {
+      console.warn("[Socket] Force disconnected:", data.reason)
+      alert(`Bạn đã đăng nhập từ thiết bị/trình duyệt khác. Phiên này sẽ bị ngắt kết nối.\n\nLý do: ${data.reason}`)
+      // Redirect to login page
+      if (typeof window !== "undefined") {
+        window.location.href = "/login"
+      }
+    })
   }
   return socket
 }
