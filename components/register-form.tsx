@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { apiRequest } from "@/lib/api"
 import { setToken } from "@/lib/auth-client"
+import { apiClient } from "@/lib/api-client"
 
 export function RegisterForm() {
   const router = useRouter()
@@ -25,10 +25,7 @@ export function RegisterForm() {
     setLoading(true)
 
     try {
-      const response = await apiRequest("/api/auth/register", {
-        method: "POST",
-        body: JSON.stringify({ username, email, password }),
-      })
+      const response = await apiClient.register(username, email, password)
 
       // Lưu token vào cookie (expires: 7 ngày)
       if (response.token) {

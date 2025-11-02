@@ -174,7 +174,7 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
               <CardTitle className="flex items-center justify-between">
                 <span>Game Board</span>
                 {room.status === "waiting" && !bothPlayersPresent && (
-                  <span className="text-sm text-muted-foreground">Waiting for player 2...</span>
+                  <span className="text-sm text-muted-foreground">Đợi người chơi thứ 2...</span>
                 )}
                 {waitingForReady && (
                   <span className="text-sm text-muted-foreground">
@@ -183,13 +183,13 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
                 )}
                 {room.status === "playing" && (
                   <span className="text-sm">
-                    {room.current_turn === playerNumber ? "Your turn" : "Opponent's turn"}
+                    {room.current_turn === playerNumber ? "Lượt của bạn" : "Lượt của đối thủ"}
                   </span>
                 )}
                 {room.status === "finished" && (
                   <span className="flex items-center gap-2 text-sm">
                     <Trophy className="size-4 text-yellow-500" />
-                    Game Finished
+                    Trò chơi đã kết thúc
                   </span>
                 )}
               </CardTitle>
@@ -199,9 +199,9 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
                 <div className="text-center p-12 text-muted-foreground">Waiting for another player to join...</div>
               ) : waitingForReady ? (
                 <div className="text-center p-12 space-y-4">
-                  <p className="text-muted-foreground">Both players have joined!</p>
+                  <p className="text-muted-foreground">Cả 2 người chơi đã tham gia!</p>
                   <p className="text-sm text-muted-foreground">
-                    Click "Ready" to start the game when you're ready.
+                    Nhấn "Sẵn sàng" để bắt đầu trò chơi.
                   </p>
                   <Button 
                     onClick={handleReady} 
@@ -209,7 +209,7 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
                     variant={isReady ? "secondary" : "default"}
                     className="min-w-[150px]"
                   >
-                    {isReady ? "✓ Ready" : "Ready"}
+                    {isReady ? "✓ Sẵn sàng" : "Sẵn sàng"}
                   </Button>
                   <div className="flex items-center justify-center gap-6 pt-4">
                     <div className="flex items-center gap-2">
