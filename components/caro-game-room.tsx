@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CaroBoard } from "./caro-board"
 import { RoomChat } from "./room-chat"
 import { PlayerStatsTooltip } from "./player-stats-tooltip"
-import { apiRequest } from "@/lib/api"
 import { getSocket } from "@/lib/socket-client"
+import { apiClient } from "@/lib/api-client"
 
 interface RoomData {
   id: number
@@ -47,7 +47,7 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
 
   const fetchRoom = async () => {
     try {
-      const data = await apiRequest(`/api/caro/room/${roomCode}`)
+      const data = await apiClient.getRoom(roomCode)
       setRoom(data.room)
     } catch (error) {
       console.error("[v0] Fetch room error:", error)

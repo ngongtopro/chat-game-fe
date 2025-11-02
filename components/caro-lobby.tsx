@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { apiRequest } from "@/lib/api"
+import { apiClient } from "@/lib/api-client"
 import { getSocket } from "@/lib/socket-client"
 
 interface Room {
@@ -27,7 +27,7 @@ export function CaroLobby() {
 
   const fetchRooms = async () => {
     try {
-      const data = await apiRequest("/api/caro/rooms")
+      const data = await apiClient.getRooms()
       setRooms(data.rooms || [])
     } catch (error) {
       console.error("[v0] Fetch rooms error:", error)
@@ -71,10 +71,7 @@ export function CaroLobby() {
 
     setLoading(true)
     try {
-      const data = await apiRequest("/api/caro/create-room", {
-        method: "POST",
-        body: JSON.stringify({ betAmount: amount }),
-      })
+      const data = await apiClient.createRoom(betAmount)
 
       router.push(`/caro/room/${data.room.room_code}`)
     } catch (error) {
@@ -88,10 +85,7 @@ export function CaroLobby() {
   const handleJoinRoom = async (roomCode: string) => {
     setLoading(true)
     try {
-      await apiRequest("/api/caro/join-room", {
-        method: "POST",
-        body: JSON.stringify({ roomCode }),
-      })
+      await apiClient.joinRoom(roomCode)
 
       router.push(`/caro/room/${roomCode}`)
     } catch (error) {

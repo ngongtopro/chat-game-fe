@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { LogOut } from "lucide-react"
 import { removeToken } from "@/lib/auth-client"
 import { disconnectSocket } from "@/lib/socket-client"
-import { apiRequest } from "@/lib/api"
+import { apiClient } from "@/lib/api-client"
 
 export function LogoutButton() {
   const router = useRouter()
@@ -16,9 +16,7 @@ export function LogoutButton() {
       disconnectSocket()
       
       // Call logout API to clear backend cookie
-      await apiRequest("/api/auth/logout", {
-        method: "POST",
-      }).catch(err => {
+      await apiClient.logout().catch(err => {
         console.error("Logout API error:", err)
       })
       
