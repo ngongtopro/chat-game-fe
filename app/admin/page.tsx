@@ -59,14 +59,16 @@ export default function AdminDashboard() {
     try {
       setLoading(true)
       const [statsData, usersData, roomsData] = await Promise.all([
-        apiClient.get("/admin/stats"),
+        apiClient.get("/api/admin/stats"),
         apiClient.getAllUsers(),
-        apiClient.get("/admin/caro/rooms"),
+        apiClient.get("/api/admin/caro/rooms"),
       ])
+      console.log("Fetched statsData.stats data:", statsData.stats)
+      console.log("Fetched usersData.users data:", usersData.users)
+      console.log("Fetched roomsData.rooms data:", roomsData.rooms)
 
       setStats(statsData.stats)
       setUsers(usersData.users)
-      console.log("Fetched usersData.users data:", usersData.users)
       setRooms(roomsData.rooms)
     } catch (error: any) {
       console.error("Failed to fetch admin data:", error)
