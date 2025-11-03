@@ -150,6 +150,45 @@ class ApiClient {
             method: "GET",
         })
     }
+
+    // Generic methods for flexibility
+    async get(endpoint: string) {
+        return await apiRequest(endpoint, {
+            method: "GET",
+        })
+    }
+
+    async post(endpoint: string, data?: any) {
+        return await apiRequest(endpoint, {
+            method: "POST",
+            body: data ? JSON.stringify(data) : undefined,
+        })
+    }
+
+    async patch(endpoint: string, data?: any) {
+        return await apiRequest(endpoint, {
+            method: "PATCH",
+            body: data ? JSON.stringify(data) : undefined,
+        })
+    }
+
+    async delete(endpoint: string) {
+        return await apiRequest(endpoint, {
+            method: "DELETE",
+        })
+    }
+
+    // Admin-specific methods
+    async getAllUsers(page = 1, limit = 20, search = "") {
+        const params = new URLSearchParams({ 
+            page: page.toString(), 
+            limit: limit.toString(),
+            search 
+        })
+        return await apiRequest(`/api/admin/users?${params}`, {
+            method: "GET",
+        })
+    }
 }
 
 export const apiClient = new ApiClient()

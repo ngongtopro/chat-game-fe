@@ -31,6 +31,11 @@ export function LoginForm() {
         setToken(response.token, 7)
       }
 
+      // Lưu user info vào localStorage (bao gồm type)
+      if (response.user) {
+        localStorage.setItem("user", JSON.stringify(response.user))
+      }
+
       router.push("/dashboard")
       router.refresh()
     } catch (err) {

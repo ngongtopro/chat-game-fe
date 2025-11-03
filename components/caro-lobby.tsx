@@ -99,37 +99,12 @@ export function CaroLobby() {
   return (
     <div className="space-y-6">
       <div className="flex gap-4">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 size-4" />
-              Create Room
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create Game Room</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="bet-amount">Bet Amount ($)</Label>
-                <Input
-                  id="bet-amount"
-                  type="number"
-                  placeholder="0.00"
-                  value={betAmount}
-                  onChange={(e) => setBetAmount(e.target.value)}
-                  min="0"
-                  step="0.01"
-                />
-                <p className="text-xs text-muted-foreground">Winner gets 80% of the total pot</p>
-              </div>
-              <Button onClick={handleCreateRoom} className="w-full" disabled={loading}>
-                {loading ? "Creating..." : "Create Room"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {/* Create Room button removed - Admin only feature */}
+        <div className="flex-1">
+          <p className="text-sm text-muted-foreground">
+            💡 Rooms are now created by admins. Join available rooms below or use a room code.
+          </p>
+        </div>
 
         <Dialog>
           <DialogTrigger asChild>
