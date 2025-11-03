@@ -123,6 +123,33 @@ class ApiClient {
             method: "GET",
         })
     }
+
+    // Quản lý ví
+    async getWalletBalance() {
+        return await apiRequest("/api/wallet/balance", {
+            method: "GET",
+        })
+    }
+
+    async deposit(amount: number, source: string) {
+        return await apiRequest("/api/wallet/deposit", {
+            method: "POST",
+            body: JSON.stringify({ amount, source: source }),
+        })
+    }
+
+    async withdraw(amount: number) {
+        return await apiRequest("/api/wallet/withdraw", {
+            method: "POST",
+            body: JSON.stringify({ amount }),
+        })
+    }
+
+    async getTransactions() {
+        return await apiRequest("/api/wallet/transactions", {
+            method: "GET",
+        })
+    }
 }
 
 export const apiClient = new ApiClient()

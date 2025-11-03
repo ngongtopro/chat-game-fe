@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { Transaction } from "@/types"
-import { apiRequest } from "@/lib/api"
+import { apiClient } from "@/lib/api-client"
 
 export function TransactionHistory() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -17,7 +17,7 @@ export function TransactionHistory() {
   const fetchTransactions = async () => {
     try {
       setLoading(true)
-      const data = await apiRequest("/api/wallet/transactions")
+      const data = await apiClient.getTransactions()
       setTransactions(data.transactions || [])
     } catch (error) {
       console.error("[v0] Fetch transactions error:", error)

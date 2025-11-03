@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
-import { apiRequest } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
+import { apiClient } from "@/lib/api-client"
 
 export function WalletCard() {
   const [balance, setBalance] = useState<number>(0)
@@ -22,7 +22,7 @@ export function WalletCard() {
   const fetchBalance = async () => {
     try {
       setLoading(true)
-      const data = await apiRequest("/api/wallet/balance")
+      const data = await apiClient.getWalletBalance()
       setBalance(data.balance)
     } catch (error) {
       console.error("[v0] Fetch balance error:", error)
@@ -44,10 +44,7 @@ export function WalletCard() {
 
     try {
       setActionLoading(true)
-      await apiRequest("/api/wallet/deposit", {
-        method: "POST",
-        body: JSON.stringify({ amount, source: "manual" }),
-      })
+      await apiClient.deposit(amount, "manual")
 
       setDepositAmount("")
       setIsDepositOpen(false)
@@ -75,10 +72,7 @@ export function WalletCard() {
 
     try {
       setActionLoading(true)
-      await apiRequest("/api/wallet/withdraw", {
-        method: "POST",
-        body: JSON.stringify({ amount }),
-      })
+      await apiClient.withdraw(amount)
 
       setWithdrawAmount("")
       setIsWithdrawOpen(false)
