@@ -64,10 +64,19 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
     socket.emit("caro:join-room", roomCode)
     console.log(`[Caro] Joined room ${roomCode}`)
 
-    // Listen for room updates (player joined)
+    // Listen for room updates (player joined or left)
     socket.on("caro:room-updated", (updatedRoom: RoomData) => {
       console.log("[Caro] Room updated:", updatedRoom)
+      console.log("[Caro] Player 1:", updatedRoom.player1_username, "ID:", updatedRoom.player1_id)
+      console.log("[Caro] Player 2:", updatedRoom.player2_username, "ID:", updatedRoom.player2_id)
+      console.log("[Caro] Ready status - P1:", updatedRoom.player1_ready, "P2:", updatedRoom.player2_ready)
       setRoom(updatedRoom)
+      
+      // Reset ready state if player 2 left (player2_id becomes null)
+      if (!updatedRoom.player2_id) {
+        setIsReady(false)
+        console.log("[Caro] Player 2 left, resetting ready status")
+      }
     })
 
     // Listen for player ready
@@ -90,6 +99,25 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
     socket.on("caro:game-started", (updatedRoom: RoomData) => {
       console.log("[Caro] Game started:", updatedRoom)
       setRoom(updatedRoom)
+    })
+
+    // Listen for room closed (host left)
+    socket.on("caro:room-closed", (data: { reason: string }) => {
+      console.log("[Caro] Room closed:", data)
+      alert("Host has left the room. Returning to lobby...")
+      router.push("/caro")
+    })
+
+    // Listen for player left (during game - forfeit)
+    socket.on("caro:player-left", (data: { playerId: number, winner: number, winnings: number, reason: string }) => {
+      console.log("[Caro] Player left:", data)
+      const playerNumber = room?.player1_id === currentUserId ? 1 : 2
+      setTimeout(() => {
+        alert(
+          `Opponent forfeited! You won! ${data.winnings ? `Earned $${data.winnings.toFixed(2)}` : ""}`
+        )
+        router.push("/caro")
+      }, 500)
     })
 
     // Listen for moves
@@ -122,6 +150,8 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
       socket.off("caro:room-updated")
       socket.off("caro:player-ready")
       socket.off("caro:game-started")
+      socket.off("caro:room-closed")
+      socket.off("caro:player-left")
       socket.off("caro:move-made")
       socket.off("caro:game-finished")
       console.log(`[Caro] Left room ${roomCode}`)
