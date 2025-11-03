@@ -9,8 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getSocket } from "@/lib/socket-client"
 import type { ChatMessage } from "@/types"
 import { useRouter } from "next/navigation"
-import { apiRequest } from "@/lib/api"
 import { cn } from "@/lib/utils"
+import { apiClient } from "@/lib/api-client"
 
 interface ChatWindowProps {
   friendId: number
@@ -33,14 +33,11 @@ export function ChatWindow({ friendId, friendUsername, currentUserId, friendAvat
 
   const fetchMessages = async () => {
     try {
-      const data = await apiRequest(`/api/chat/messages?friendId=${friendId}`)
+      const data = await apiClient.getChatMessages(friendId)
       setMessages(data.messages || [])
       
       // Mark messages as read
-      await apiRequest("/api/chat/mark-read", {
-        method: "POST",
-        body: JSON.stringify({ friendId }),
-      })
+      await apiClient.markMessagesAsRead(friendId)
     } catch (error) {
       console.error("[v0] Fetch messages error:", error)
     } finally {
@@ -58,7 +55,7 @@ export function ChatWindow({ friendId, friendUsername, currentUserId, friendAvat
     console.log(`[Chat] Joined chat room: ${chatId}`)
 
     // Check if friend is online initially
-    apiRequest("/api/chat/online-users")
+    apiClient.getOnlineUsers()
       .then(data => {
         setIsOnline(data.onlineUsers?.includes(friendId) || false)
       })
@@ -77,10 +74,8 @@ export function ChatWindow({ friendId, friendUsername, currentUserId, friendAvat
       
       // Mark as read if we're in this chat
       if (message.sender_id === friendId) {
-        apiRequest("/api/chat/mark-read", {
-          method: "POST",
-          body: JSON.stringify({ friendId }),
-        }).catch(console.error)
+        apiClient.markMessagesAsRead(friendId)
+        .catch(console.error)
       }
     })
 
@@ -128,10 +123,7 @@ export function ChatWindow({ friendId, friendUsername, currentUserId, friendAvat
     setInput("")
 
     try {
-      const data = await apiRequest("/api/chat/send", {
-        method: "POST",
-        body: JSON.stringify({ receiverId: friendId, message: tempMessage }),
-      })
+      const data = await apiClient.sendMessage(friendId, tempMessage)
 
       // Add message to local state immediately
       setMessages((prev) => [...prev, data.message])

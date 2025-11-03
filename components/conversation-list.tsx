@@ -5,9 +5,9 @@ import { MessageCircle, Clock } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { apiRequest } from "@/lib/api"
 import { getSocket } from "@/lib/socket-client"
 import { cn } from "@/lib/utils"
+import { apiClient } from "@/lib/api-client"
 
 interface Conversation {
   friend_id: number
@@ -37,7 +37,7 @@ export function ConversationList({ selectedFriendId, onSelectFriend }: Conversat
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const data = await apiRequest("/api/chat/conversations")
+        const data = await apiClient.getConversations()
         setConversations(data.conversations || [])
       } catch (error) {
         console.error("[v0] Fetch conversations error:", error)
@@ -48,7 +48,7 @@ export function ConversationList({ selectedFriendId, onSelectFriend }: Conversat
 
     const fetchOnlineUsers = async () => {
       try {
-        const data = await apiRequest("/api/chat/online-users")
+        const data = await apiClient.getOnlineUsers()
         setOnlineUserIds(new Set(data.onlineUsers || []))
       } catch (error) {
         console.error("[v0] Fetch online users error:", error)

@@ -90,6 +90,39 @@ class ApiClient {
             body: JSON.stringify({ roomCode, x, y, player: player }),
         })
     }
+
+    // Phần quản lý chat
+    async getChatMessages(friendId: number) {
+        return await apiRequest(`/api/chat/messages?friendId=${friendId}`, {
+            method: "GET",
+        })
+    }
+
+    async markMessagesAsRead(friendId: number) {
+        return await apiRequest("/api/chat/mark-read", {
+            method: "POST",
+            body: JSON.stringify({ friendId }),
+        })
+    }
+
+    async getOnlineUsers() {
+        return await apiRequest("/api/chat/online-users", {
+            method: "GET",
+        })
+    }
+
+    async sendMessage(receiverId: number, message: string) {
+        return await apiRequest("/api/chat/send", {
+            method: "POST",
+            body: JSON.stringify({ receiverId: receiverId, message: message }),
+        })
+    }
+
+    async getConversations() {
+        return await apiRequest("/api/chat/conversations", {
+            method: "GET",
+        })
+    }
 }
 
 export const apiClient = new ApiClient()
