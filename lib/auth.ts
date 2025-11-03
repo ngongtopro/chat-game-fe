@@ -44,6 +44,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
       
     } catch (jwtError) {
       // Token không hợp lệ hoặc expired
+      console.log("JWT_SECRET:", JWT_SECRET)
       console.log("Invalid token:", jwtError instanceof Error ? jwtError.message : "Unknown error")
       return null
     }

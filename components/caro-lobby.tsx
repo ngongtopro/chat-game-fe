@@ -164,7 +164,7 @@ export function CaroLobby() {
         ) : (
           <div className="grid gap-3">
             {rooms.map((room) => (
-              <Card key={room.id}>
+              <Card key={room.room_code}>
                 <CardContent className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-4">
                     <Users className="size-5 text-muted-foreground" />
