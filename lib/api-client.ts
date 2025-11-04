@@ -69,13 +69,6 @@ class ApiClient {
         })
     }
 
-    async createRoom(amount: string) {
-        return await apiRequest("/api/caro/create-room", {
-            method: "POST",
-            body: JSON.stringify({ betAmount: amount }),
-        })
-    }
-
     async joinRoom(roomCode: string) {
         return await apiRequest("/api/caro/join-room", {
             method: "POST",
@@ -151,33 +144,6 @@ class ApiClient {
         })
     }
 
-    // Generic methods for flexibility
-    async get(endpoint: string) {
-        return await apiRequest(endpoint, {
-            method: "GET",
-        })
-    }
-
-    async post(endpoint: string, data?: any) {
-        return await apiRequest(endpoint, {
-            method: "POST",
-            body: data ? JSON.stringify(data) : undefined,
-        })
-    }
-
-    async patch(endpoint: string, data?: any) {
-        return await apiRequest(endpoint, {
-            method: "PATCH",
-            body: data ? JSON.stringify(data) : undefined,
-        })
-    }
-
-    async delete(endpoint: string) {
-        return await apiRequest(endpoint, {
-            method: "DELETE",
-        })
-    }
-
     // Admin-specific methods
     async getAllUsers(page = 1, limit = 20, search = "") {
         const params = new URLSearchParams({ 
@@ -187,6 +153,83 @@ class ApiClient {
         })
         return await apiRequest(`/api/admin/users?${params}`, {
             method: "GET",
+        })
+    }
+
+    async deleteUser(userId: number) {
+        return await apiRequest(`/api/admin/users/${userId}`, {
+            method: "DELETE",
+        })
+    }
+
+    async getDashboardStats() {
+        return await apiRequest("/api/admin/stats", {
+            method: "GET",
+        })
+    }
+
+    async getCaroRooms() {
+        return await apiRequest("/api/admin/caro/rooms", {
+            method: "GET",
+        })
+    }
+
+    async deleteCaroRoom(roomCode: string) {
+        return await apiRequest(`/api/admin/caro/rooms/${roomCode}`, {
+            method: "DELETE",
+        })
+    }
+    
+    async createRoom(amount: string) {
+        return await apiRequest("/api/admin/caro/rooms", {
+            method: "POST",
+            body: JSON.stringify({ betAmount: amount }),
+        })
+    }
+
+    async updateRoomBet(roomCode: string, newBetAmount: string) {
+        return await apiRequest(`/api/admin/caro/rooms/${roomCode}`, {
+            method: "PATCH",
+            body: JSON.stringify({ betAmount: newBetAmount }),
+        })
+    }
+
+    async updateBalance(userId: number, balanceChange: string, editUserForm: { username?: string; email?: string; type?: string }) {
+        return await apiRequest(`/api/admin/users/${userId}`, {
+            method: "PATCH",
+            body: JSON.stringify({
+                                balanceChange: parseFloat(balanceChange),
+                                username: editUserForm.username || undefined,
+                                email: editUserForm.email || undefined,
+                                type: editUserForm.type || undefined,
+                                }),
+        })
+    }
+
+    // Generic methods for flexibility
+    private async get(endpoint: string) {
+        return await apiRequest(endpoint, {
+            method: "GET",
+        })
+    }
+
+    private async post(endpoint: string, data?: any) {
+        return await apiRequest(endpoint, {
+            method: "POST",
+            body: data ? JSON.stringify(data) : undefined,
+        })
+    }
+
+    private async patch(endpoint: string, data?: any) {
+        return await apiRequest(endpoint, {
+            method: "PATCH",
+            body: data ? JSON.stringify(data) : undefined,
+        })
+    }
+
+    private async delete(endpoint: string) {
+        return await apiRequest(endpoint, {
+            method: "DELETE",
         })
     }
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, DollarSign, GamepadIcon, Plus, Search, Trash2, Edit } from "lucide-react"
 import { apiClient } from "@/lib/api-client"
 import { AdminRoute } from "@/components/admin-route"
+import { UsersTab } from "./users"
+import { RoomsTab } from "./rooms"
 
 interface User {
   id: number
@@ -46,10 +48,6 @@ export default function AdminDashboard() {
   const [rooms, setRooms] = useState<Room[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(true)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [balanceChange, setBalanceChange] = useState("")
-  const [newRoomBet, setNewRoomBet] = useState("10")
-  const [showCreateRoomDialog, setShowCreateRoomDialog] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -58,17 +56,14 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const [statsData, usersData, roomsData] = await Promise.all([
-        apiClient.get("/api/admin/stats"),
-        apiClient.getAllUsers(),
-        apiClient.get("/api/admin/caro/rooms"),
+      const [statsData, roomsData] = await Promise.all([
+        apiClient.getDashboardStats(),
+        apiClient.getCaroRooms(),
       ])
       console.log("Fetched statsData.stats data:", statsData.stats)
-      console.log("Fetched usersData.users data:", usersData.users)
       console.log("Fetched roomsData.rooms data:", roomsData.rooms)
 
       setStats(statsData.stats)
-      setUsers(usersData.users)
       setRooms(roomsData.rooms)
     } catch (error: any) {
       console.error("Failed to fetch admin data:", error)
@@ -80,70 +75,6 @@ export default function AdminDashboard() {
       setLoading(false)
     }
   }
-
-  const handleUpdateUserBalance = async () => {
-    if (!selectedUser || !balanceChange) return
-
-    try {
-      await apiClient.patch(`/admin/users/${selectedUser.id}`, {
-        balanceChange: parseFloat(balanceChange),
-      })
-      alert("Balance updated successfully")
-      setSelectedUser(null)
-      setBalanceChange("")
-      fetchData()
-    } catch (error) {
-      console.error("Failed to update balance:", error)
-      alert("Failed to update balance")
-    }
-  }
-
-  const handleDeleteUser = async (userId: number) => {
-    if (!confirm("Are you sure you want to delete this user?")) return
-
-    try {
-      await apiClient.delete(`/admin/users/${userId}`)
-      alert("User deleted successfully")
-      fetchData()
-    } catch (error) {
-      console.error("Failed to delete user:", error)
-      alert("Failed to delete user")
-    }
-  }
-
-  const handleCreateRoom = async () => {
-    try {
-      const response = await apiClient.post("/admin/caro/rooms", {
-        betAmount: parseFloat(newRoomBet),
-      })
-      alert(`Room created: ${response.room.roomCode}`)
-      setShowCreateRoomDialog(false)
-      setNewRoomBet("10")
-      fetchData()
-    } catch (error) {
-      console.error("Failed to create room:", error)
-      alert("Failed to create room")
-    }
-  }
-
-  const handleDeleteRoom = async (roomCode: string) => {
-    if (!confirm("Are you sure you want to close this room?")) return
-
-    try {
-      await apiClient.delete(`/admin/caro/rooms/${roomCode}`)
-      alert("Room closed successfully")
-      fetchData()
-    } catch (error) {
-      console.error("Failed to close room:", error)
-      alert("Failed to close room")
-    }
-  }
-
-  const filteredUsers = users.filter(
-    (user) =>
-      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  )
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
@@ -210,203 +141,27 @@ export default function AdminDashboard() {
         </TabsList>
 
         {/* Users Tab */}
-        <TabsContent value="users" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>User Management</CardTitle>
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 size-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search users..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-8 w-64"
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Username</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Balance</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.username}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        <Badge variant={user.type === "admin" ? "default" : "secondary"}>
-                          {user.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>${parseFloat(user.balance || "0").toFixed(2)}</TableCell>
-                      <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setSelectedUser(user)}
-                        >
-                          <Edit className="size-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeleteUser(user.id)}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <UsersTab
+          users={users}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          onEditUser={() => {}}
+          onDeleteUser={() => {}}
+          setUsers={setUsers}
+          onUpdateUserSuccess={() => alert("User updated successfully")}
+        />
 
         {/* Rooms Tab */}
-        <TabsContent value="rooms" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Caro Room Management</CardTitle>
-                <Button onClick={() => setShowCreateRoomDialog(true)}>
-                  <Plus className="mr-2 size-4" />
-                  Create Room
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Room Code</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Player 1</TableHead>
-                    <TableHead>Player 2</TableHead>
-                    <TableHead>Bet Amount</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rooms.map((room) => (
-                    <TableRow key={room.id}>
-                      <TableCell className="font-medium">{room.roomCode}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            room.status === "playing"
-                              ? "default"
-                              : room.status === "waiting"
-                                ? "secondary"
-                                : "outline"
-                          }
-                        >
-                          {room.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{room.player1Username}</TableCell>
-                      <TableCell>{room.player2Username || "Waiting..."}</TableCell>
-                      <TableCell>${parseFloat(room.betAmount).toFixed(2)}</TableCell>
-                      <TableCell>{new Date(room.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeleteRoom(room.roomCode)}
-                          disabled={room.status === "finished"}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <RoomsTab
+          rooms={rooms}
+          onCreateRoom={() => {}}
+          onEditRoom={() => {}}
+          onDeleteRoom={() => {}}
+          setRooms={setRooms}
+          onCreateRoomSuccess={(message) => alert(message)}
+          onUpdateRoomSuccess={() => alert("Room updated successfully")}
+        />
       </Tabs>
-
-      {/* Edit User Balance Dialog */}
-      <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit User Balance</DialogTitle>
-            <DialogDescription>
-              Adjust balance for {selectedUser?.username}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Current Balance</p>
-              <p className="text-2xl font-bold">
-                ${parseFloat(selectedUser?.balance || "0").toFixed(2)}
-              </p>
-            </div>
-            <div>
-              <label className="text-sm font-medium">
-                Balance Change (+ to add, - to subtract)
-              </label>
-              <Input
-                type="number"
-                step="0.01"
-                value={balanceChange}
-                onChange={(e) => setBalanceChange(e.target.value)}
-                placeholder="e.g., 100 or -50"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedUser(null)}>
-              Cancel
-            </Button>
-            <Button onClick={handleUpdateUserBalance}>Update Balance</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Room Dialog */}
-      <Dialog open={showCreateRoomDialog} onOpenChange={setShowCreateRoomDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create Caro Room</DialogTitle>
-            <DialogDescription>Create a new game room as admin</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Bet Amount ($)</label>
-              <Input
-                type="number"
-                step="0.01"
-                min="1"
-                value={newRoomBet}
-                onChange={(e) => setNewRoomBet(e.target.value)}
-                placeholder="10"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateRoomDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateRoom}>Create Room</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       </div>
     </AdminRoute>
   )

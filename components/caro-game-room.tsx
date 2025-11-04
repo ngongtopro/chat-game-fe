@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Copy, Trophy } from "lucide-react"
+import { Copy, Trophy, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CaroBoard } from "./caro-board"
@@ -44,6 +44,7 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
   const [room, setRoom] = useState<RoomData | null>(null)
   const [loading, setLoading] = useState(true)
   const [isReady, setIsReady] = useState(false)
+  const [onlineUsers, setOnlineUsers] = useState<Set<number>>(new Set())
 
   const fetchRoom = async () => {
     try {
@@ -77,6 +78,26 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
         setIsReady(false)
         console.log("[Caro] Player 2 left, resetting ready status")
       }
+    })
+
+    // Listen for online users in room
+    socket.on("caro:room-users-online", (data: { userIds: number[] }) => {
+      console.log("[Caro] Online users in room:", data.userIds)
+      setOnlineUsers(new Set(data.userIds))
+    })
+
+    socket.on("caro:user-online", (data: { userId: number }) => {
+      console.log("[Caro] User came online:", data.userId)
+      setOnlineUsers(prev => new Set([...prev, data.userId]))
+    })
+
+    socket.on("caro:user-offline", (data: { userId: number }) => {
+      console.log("[Caro] User went offline:", data.userId)
+      setOnlineUsers(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(data.userId)
+        return newSet
+      })
     })
 
     // Listen for player ready
@@ -148,6 +169,9 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
     return () => {
       socket.emit("caro:leave-room", roomCode)
       socket.off("caro:room-updated")
+      socket.off("caro:room-users-online")
+      socket.off("caro:user-online")
+      socket.off("caro:user-offline")
       socket.off("caro:player-ready")
       socket.off("caro:game-started")
       socket.off("caro:room-closed")
@@ -189,12 +213,18 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Caro Game</h1>
-        <Button variant="outline" onClick={copyRoomCode}>
-          <Copy className="mr-2 size-4" />
-          {roomCode}
+      <div className="flex items-center gap-4">
+        <Button variant="outline" onClick={() => router.push("/dashboard")}>
+          <ArrowLeft className="mr-2 size-4" />
+          Back to Dashboard
         </Button>
+        <h1 className="text-3xl font-bold">Caro Game</h1>
+        <div className="ml-auto">
+          <Button variant="outline" onClick={copyRoomCode}>
+            <Copy className="mr-2 size-4" />
+            {roomCode}
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -225,7 +255,7 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {room.status === "waiting" && !bothPlayersPresent ? (
+              {room.status === "waiting" ? (
                 <div className="text-center p-12 text-muted-foreground">Waiting for another player to join...</div>
               ) : waitingForReady ? (
                 <div className="text-center p-12 space-y-4">
@@ -271,27 +301,43 @@ export function CaroGameRoom({ roomCode, currentUserId, currentUsername }: CaroG
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="size-3 rounded-full bg-blue-500" />
+                  <div className="relative">
+                    <div className="size-3 rounded-full bg-blue-500" />
+                    <div className={`absolute -top-0.5 -right-0.5 size-2 rounded-full ${onlineUsers.has(room.player1_id) ? "bg-green-500" : "bg-gray-400"}`} title={onlineUsers.has(room.player1_id) ? "Online" : "Offline"} />
+                  </div>
                   <PlayerStatsTooltip
                     username={room.player1_username}
                     gamesPlayed={room.player1_games || 0}
                     gamesWon={room.player1_wins || 0}
                     level={room.player1_level || 1}
                   />
+                  {onlineUsers.has(room.player1_id) && (
+                    <span className="text-xs text-green-600 font-medium">Online</span>
+                  )}
                 </div>
                 <span className="text-sm text-muted-foreground">Player 1 (X)</span>
               </div>
 
               <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="size-3 rounded-full bg-red-500" />
+                  <div className="relative">
+                    <div className="size-3 rounded-full bg-red-500" />
+                    {room.player2_id && (
+                      <div className={`absolute -top-0.5 -right-0.5 size-2 rounded-full ${onlineUsers.has(room.player2_id) ? "bg-green-500" : "bg-gray-400"}`} title={onlineUsers.has(room.player2_id) ? "Online" : "Offline"} />
+                    )}
+                  </div>
                   {room.player2_username ? (
-                    <PlayerStatsTooltip
-                      username={room.player2_username}
-                      gamesPlayed={room.player2_games || 0}
-                      gamesWon={room.player2_wins || 0}
-                      level={room.player2_level || 1}
-                    />
+                    <>
+                      <PlayerStatsTooltip
+                        username={room.player2_username}
+                        gamesPlayed={room.player2_games || 0}
+                        gamesWon={room.player2_wins || 0}
+                        level={room.player2_level || 1}
+                      />
+                      {room.player2_id && onlineUsers.has(room.player2_id) && (
+                        <span className="text-xs text-green-600 font-medium">Online</span>
+                      )}
+                    </>
                   ) : (
                     <span className="text-muted-foreground">Waiting...</span>
                   )}

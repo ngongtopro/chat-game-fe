@@ -12,10 +12,10 @@ import { apiClient } from "@/lib/api-client"
 import { getSocket } from "@/lib/socket-client"
 
 interface Room {
-  id: number
-  room_code: string
-  player1_username: string
-  bet_amount: number
+  gameId: number
+  roomCode: string
+  player1Username: string
+  betAmount: number
 }
 
 export function CaroLobby() {
@@ -28,6 +28,7 @@ export function CaroLobby() {
   const fetchRooms = async () => {
     try {
       const data = await apiClient.getRooms()
+      console.log("Fetched rooms:", data.rooms)
       setRooms(data.rooms || [])
     } catch (error) {
       console.error("[v0] Fetch rooms error:", error)
@@ -51,7 +52,7 @@ export function CaroLobby() {
     // Listen for room started (remove from list)
     socket.on("caro:room-started", (data: { roomCode: string }) => {
       console.log("[Caro] Room started:", data.roomCode)
-      setRooms(prev => prev.filter(r => r.room_code !== data.roomCode))
+      setRooms(prev => prev.filter(r => r.roomCode !== data.roomCode))
     })
 
     return () => {
@@ -61,26 +62,6 @@ export function CaroLobby() {
       console.log("[Caro] Left lobby")
     }
   }, [])
-
-  const handleCreateRoom = async () => {
-    const amount = Number.parseFloat(betAmount)
-    if (isNaN(amount) || amount <= 0) {
-      alert("Please enter a valid bet amount")
-      return
-    }
-
-    setLoading(true)
-    try {
-      const data = await apiClient.createRoom(betAmount)
-
-      router.push(`/caro/room/${data.room.room_code}`)
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to create room")
-      console.error("[v0] Create room error:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleJoinRoom = async (roomCode: string) => {
     setLoading(true)
@@ -139,18 +120,18 @@ export function CaroLobby() {
         ) : (
           <div className="grid gap-3">
             {rooms.map((room) => (
-              <Card key={room.room_code}>
+              <Card key={room.roomCode}>
                 <CardContent className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-4">
                     <Users className="size-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">Room: {room.room_code}</p>
+                      <p className="font-medium">Room: {room.gameId}</p>
                       <p className="text-sm text-muted-foreground">
-                        Host: {room.player1_username} • Bet: ${room.bet_amount}
+                        Host: {room.player1Username} • Bet: ${room.betAmount}
                       </p>
                     </div>
                   </div>
-                  <Button onClick={() => handleJoinRoom(room.room_code)} disabled={loading}>
+                  <Button onClick={() => handleJoinRoom(room.roomCode)} disabled={loading}>
                     Join
                   </Button>
                 </CardContent>
