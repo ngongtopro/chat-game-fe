@@ -15,8 +15,7 @@ interface Room {
   id: number
   roomCode: string
   status: string
-  player1Username: string
-  player2Username: string | null
+  maxUsers: number
   betAmount: string
   createdAt: string
 }
@@ -117,12 +116,11 @@ export function RoomsTab({ rooms, onCreateRoom, onEditRoom, onDeleteRoom, setRoo
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Room Code</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Player 1</TableHead>
-                  <TableHead>Player 2</TableHead>
-                  <TableHead>Bet Amount</TableHead>
-                  <TableHead>Created</TableHead>
+                  <TableHead>Mã phòng</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                  <TableHead>Số người tối đa</TableHead>
+                  <TableHead>Số tiền cược(VNĐ)</TableHead>
+                  <TableHead>Ngày tạo</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -143,9 +141,8 @@ export function RoomsTab({ rooms, onCreateRoom, onEditRoom, onDeleteRoom, setRoo
                         {room.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{room.player1Username}</TableCell>
-                    <TableCell>{room.player2Username || "Waiting..."}</TableCell>
-                    <TableCell>${parseFloat(room.betAmount).toFixed(2)}</TableCell>
+                    <TableCell>{room.maxUsers}</TableCell>
+                    <TableCell>{room.betAmount}</TableCell>
                     <TableCell>{new Date(room.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button

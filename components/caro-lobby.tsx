@@ -12,10 +12,11 @@ import { apiClient } from "@/lib/api-client"
 import { getSocket } from "@/lib/socket-client"
 
 interface Room {
-  gameId: number
-  roomCode: string
-  player1Username: string
-  betAmount: number
+  roomCode: string,
+  userAmount: string,
+  betAmount: string,
+  currentPlayerCount: number,
+  maxPlayers: number
 }
 
 export function CaroLobby() {
@@ -30,6 +31,7 @@ export function CaroLobby() {
       const data = await apiClient.getRooms()
       console.log("Fetched rooms:", data.rooms)
       setRooms(data.rooms || [])
+      console.log("Updated rooms state:", rooms)
     } catch (error) {
       console.error("[v0] Fetch rooms error:", error)
     }
@@ -125,9 +127,9 @@ export function CaroLobby() {
                   <div className="flex items-center gap-4">
                     <Users className="size-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">Room: {room.gameId}</p>
+                      <p className="font-medium">Room: {room.roomCode}</p>
                       <p className="text-sm text-muted-foreground">
-                        Host: {room.player1Username} • Bet: ${room.betAmount}
+                        Users: {room.currentPlayerCount || 0}/{room.maxPlayers} • Bet: {room.betAmount || 0} VNĐ
                       </p>
                     </div>
                   </div>
