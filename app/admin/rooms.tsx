@@ -32,7 +32,8 @@ interface RoomsTabProps {
 
 export function RoomsTab({ rooms, onCreateRoom, onEditRoom, onDeleteRoom, setRooms, onCreateRoomSuccess, onUpdateRoomSuccess }: RoomsTabProps) {
   const [showCreateRoomDialog, setShowCreateRoomDialog] = useState(false)
-  const [newRoomBet, setNewRoomBet] = useState("10")
+  const [newRoomBet, setNewRoomBet] = useState("10000")
+  const [newRoomMaxUsers, setNewRoomMaxUsers] = useState("2")
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null)
   const [editRoomBetAmount, setEditRoomBetAmount] = useState("")
 
@@ -50,15 +51,18 @@ export function RoomsTab({ rooms, onCreateRoom, onEditRoom, onDeleteRoom, setRoo
   }, [])
 
   const handleCreateRoomClick = () => {
+    setNewRoomBet("10000")
+    setNewRoomMaxUsers("2")
     setShowCreateRoomDialog(true)
   }
 
   const handleCreateRoomSubmit = async () => {
     try {
-      const response = await apiClient.createRoom(newRoomBet)
+      const response = await apiClient.createRoom(newRoomBet, parseInt(newRoomMaxUsers))
       onCreateRoomSuccess(`Room created: ${response.room.roomCode}`)
       setShowCreateRoomDialog(false)
-      setNewRoomBet("10")
+      setNewRoomBet("10000")
+      setNewRoomMaxUsers("2")
       fetchCaroRooms()
     } catch (error) {
       console.error("Failed to create room:", error)
@@ -68,7 +72,7 @@ export function RoomsTab({ rooms, onCreateRoom, onEditRoom, onDeleteRoom, setRoo
 
   const handleEditRoomClick = (room: Room) => {
     setSelectedRoom(room)
-    setEditRoomBetAmount(room.betAmount)
+    setEditRoomBetAmount(parseFloat(room.betAmount).toString())
   }
 
   const handleUpdateRoomSubmit = async () => {
@@ -119,7 +123,7 @@ export function RoomsTab({ rooms, onCreateRoom, onEditRoom, onDeleteRoom, setRoo
                   <TableHead>Mã phòng</TableHead>
                   <TableHead>Trạng thái</TableHead>
                   <TableHead>Số người tối đa</TableHead>
-                  <TableHead>Số tiền cược(VNĐ)</TableHead>
+                  <TableHead>Số tiền cược</TableHead>
                   <TableHead>Ngày tạo</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -142,7 +146,7 @@ export function RoomsTab({ rooms, onCreateRoom, onEditRoom, onDeleteRoom, setRoo
                       </Badge>
                     </TableCell>
                     <TableCell>{room.maxUsers}</TableCell>
-                    <TableCell>{room.betAmount}</TableCell>
+                    <TableCell>{parseFloat(room.betAmount).toLocaleString('vi-VN')} VNĐ</TableCell>
                     <TableCell>{new Date(room.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button
@@ -171,7 +175,13 @@ export function RoomsTab({ rooms, onCreateRoom, onEditRoom, onDeleteRoom, setRoo
       </TabsContent>
 
       {/* Create Room Dialog */}
-      <Dialog open={showCreateRoomDialog} onOpenChange={setShowCreateRoomDialog}>
+      <Dialog open={showCreateRoomDialog} onOpenChange={(open) => {
+        setShowCreateRoomDialog(open)
+        if (!open) {
+          setNewRoomBet("10000")
+          setNewRoomMaxUsers("2")
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create Caro Room</DialogTitle>
@@ -179,14 +189,25 @@ export function RoomsTab({ rooms, onCreateRoom, onEditRoom, onDeleteRoom, setRoo
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Bet Amount ($)</label>
+              <label className="text-sm font-medium">Số tiền cược (VNĐ)</label>
               <Input
                 type="number"
-                step="0.01"
-                min="1"
+                step="1000"
+                min="1000"
                 value={newRoomBet}
                 onChange={(e) => setNewRoomBet(e.target.value)}
-                placeholder="10"
+                placeholder="10000"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Số người tối đa</label>
+              <Input
+                type="number"
+                min="2"
+                max="10"
+                value={newRoomMaxUsers}
+                onChange={(e) => setNewRoomMaxUsers(e.target.value)}
+                placeholder="2"
               />
             </div>
           </div>
@@ -224,14 +245,14 @@ export function RoomsTab({ rooms, onCreateRoom, onEditRoom, onDeleteRoom, setRoo
               </Badge>
             </div>
             <div>
-              <label className="text-sm font-medium">Bet Amount ($)</label>
+              <label className="text-sm font-medium">Số tiền cược (VNĐ)</label>
               <Input
                 type="number"
-                step="0.01"
-                min="1"
+                step="1000"
+                min="1000"
                 value={editRoomBetAmount}
                 onChange={(e) => setEditRoomBetAmount(e.target.value)}
-                placeholder="10"
+                placeholder="10000"
               />
             </div>
           </div>

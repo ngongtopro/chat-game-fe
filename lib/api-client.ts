@@ -180,10 +180,10 @@ class ApiClient {
         })
     }
     
-    async createRoom(amount: string) {
+    async createRoom(amount: string, maxUsers: number) {
         return await apiRequest("/api/admin/caro/rooms", {
             method: "POST",
-            body: JSON.stringify({ betAmount: amount }),
+            body: JSON.stringify({ betAmount: amount, maxUsers: maxUsers }),
         })
     }
 
